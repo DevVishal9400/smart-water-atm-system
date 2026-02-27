@@ -1,13 +1,18 @@
 package com.vt.water.atm.auth.controller;
 
+import com.vt.water.atm.auth.dto.LoginRequestDto;
 import com.vt.water.atm.auth.dto.RegisterRequestDto;
 import com.vt.water.atm.auth.dto.RegistrationResponseDto;
 import com.vt.water.atm.auth.service.AuthService;
 import com.vt.water.atm.common.response.ApiResponse;
+import com.vt.water.atm.security.jwt.JWTUtil;
+import com.vt.water.atm.security.service.CustomUserDetailsService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +26,12 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JWTUtil jwtUtil;
 
     //register the user
     @PostMapping("/register")
@@ -32,6 +43,29 @@ public class AuthController {
                 "User registered successfully",
                 registrationResponseDto,
                 LocalDateTime.now()
-                ));
+        ));
     }
+
+    //generate JWT after user validation
+    @PostMapping("/jwt")
+    public ResponseEntity<ApiResponse> generateJWT(@RequestBody @Valid LoginRequestDto loginRequestDto) {
+
+//get the user from db using username
+        UserDetails userDetails = this.userDetailsService.loadUserByUsername(loginRequestDto.getMobile());
+
+        //validate its pass
+        if (userDetails != null && userDetails.getPassword() != null && this.passwordEncoder.matches(userDetails.getPassword(), loginRequestDto.getPassword())) {
+
+            //generate JWT
+            String jwtToken = this.jwtUtil.generateToken(userDetails);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(true, "JWT Generated Successfully", jwtToken, LocalDateTime.now()));
+
+
+        } else
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse(false, "Invalid Login Credentials!!!", null, LocalDateTime.now()));
+
+        //generate jwt
+
+    }
+
 }
