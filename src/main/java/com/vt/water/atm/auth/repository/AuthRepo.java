@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AuthRepo extends JpaRepository<User,Integer> {
+    public User findByMobile(String mobile);
 }
