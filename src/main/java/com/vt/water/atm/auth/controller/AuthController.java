@@ -11,6 +11,10 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +36,8 @@ public class AuthController {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private JWTUtil jwtUtil;
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     //register the user
     @PostMapping("/register")
@@ -50,22 +56,18 @@ public class AuthController {
     @PostMapping("/jwt")
     public ResponseEntity<ApiResponse> generateJWT(@RequestBody @Valid LoginRequestDto loginRequestDto) {
 
-//get the user from db using username
-        UserDetails userDetails = this.userDetailsService.loadUserByUsername(loginRequestDto.getMobile());
-
-        //validate its pass
-        if (userDetails != null && userDetails.getPassword() != null && this.passwordEncoder.matches(userDetails.getPassword(), loginRequestDto.getPassword())) {
-
-            //generate JWT
+        //validate using AuthManager, authorization not included
+        try {
+            Authentication authentication = this.authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestDto.getMobile(), loginRequestDto.getPassword()));
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String jwtToken = this.jwtUtil.generateToken(userDetails);
             return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(true, "JWT Generated Successfully", jwtToken, LocalDateTime.now()));
 
+        } catch (BadCredentialsException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse(false, ex.getMessage(), null, LocalDateTime.now()));
 
-        } else
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse(false, "Invalid Login Credentials!!!", null, LocalDateTime.now()));
+        }
 
-        //generate jwt
 
     }
-
 }
