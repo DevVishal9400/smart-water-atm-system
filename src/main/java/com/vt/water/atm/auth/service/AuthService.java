@@ -14,6 +14,8 @@ import com.vt.water.atm.user.entity.dto.UserResponseDto;
 import com.vt.water.atm.user.entity.mapper.ToUserResponseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,6 +59,20 @@ public class AuthService {
         UserResponseDto userResponseDto = ToUserResponseDto.mapToUserResponseDto(savedUser);
         CardResponseDto cardResponseDto = ToCardResponseDto.mapToCardResponseDto(newcard);
         return new RegistrationResponseDto(userResponseDto, cardResponseDto);
+
+    }
+
+    //get user by mobile
+    public User getUserByMobileNumber(String mobile) {
+
+        if(mobile!=null && !mobile.isBlank()){
+            User userByMobile = this.authRepo.findByMobile(mobile);
+            if (userByMobile == null)
+                throw new UsernameNotFoundException("User With Given Mobile Not Exists!!!!");
+            else
+                return userByMobile;
+        }else
+            throw new IllegalArgumentException("Invalid arguments!!!");
 
     }
 }
