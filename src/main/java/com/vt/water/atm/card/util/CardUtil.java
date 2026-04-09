@@ -1,4 +1,4 @@
-package com.vt.water.atm.card.entity.util;
+package com.vt.water.atm.card.util;
 
 import org.springframework.stereotype.Component;
 

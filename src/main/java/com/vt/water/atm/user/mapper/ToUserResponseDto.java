@@ -1,7 +1,7 @@
-package com.vt.water.atm.user.entity.mapper;
+package com.vt.water.atm.user.mapper;
 
 import com.vt.water.atm.user.entity.User;
-import com.vt.water.atm.user.entity.dto.UserResponseDto;
+import com.vt.water.atm.user.dto.UserResponseDto;
 
 public class ToUserResponseDto {
 

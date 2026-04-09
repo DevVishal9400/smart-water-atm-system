@@ -1,7 +1,7 @@
-package com.vt.water.atm.card.entity.mapper;
+package com.vt.water.atm.card.mapper;
 
 import com.vt.water.atm.card.entity.Card;
-import com.vt.water.atm.card.entity.dto.CardResponseDto;
+import com.vt.water.atm.card.dto.CardResponseDto;
 
 public class ToCardResponseDto {
 

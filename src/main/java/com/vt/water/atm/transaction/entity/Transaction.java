@@ -23,4 +23,5 @@ public class Transaction extends BaseEntity {
     private String transactionId;
     @ManyToOne(optional = false)
     private Card card;
+    private String type;
 }

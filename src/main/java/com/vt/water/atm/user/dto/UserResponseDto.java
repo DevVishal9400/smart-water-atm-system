@@ -1,4 +1,4 @@
-package com.vt.water.atm.user.entity.dto;
+package com.vt.water.atm.user.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
