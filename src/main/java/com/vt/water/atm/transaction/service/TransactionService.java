@@ -3,6 +3,8 @@ package com.vt.water.atm.transaction.service;
 import com.vt.water.atm.auth.service.AuthService;
 import com.vt.water.atm.card.entity.Card;
 import com.vt.water.atm.card.repositoy.CardRepo;
+import com.vt.water.atm.constants.AppConstants;
+import com.vt.water.atm.exception.InsufficientBalanceException;
 import com.vt.water.atm.exception.TransactionNotFoundException;
 import com.vt.water.atm.transaction.dto.ConfirmTransactionResponseDto;
 import com.vt.water.atm.transaction.dto.InitiateTransactionRequestDto;
@@ -67,10 +69,10 @@ public class TransactionService {
 
     //confirm transaction
     @Transactional
-    public ConfirmTransactionResponseDto confirmTransaction(String transactionId, String mobile) {
+    public ConfirmTransactionResponseDto confirmTransaction(String transactionId, String mobile, String transactionType) {
         //get the transaction id
         //get card details and update amount
-        Transaction transaction = this.transactionRepo.findByTransactionId(transactionId).orElseThrow(() -> new TransactionNotFoundException("Transaction not found for given ID!"));
+        Transaction transaction = this.transactionRepo.findByTransactionId(transactionId).orElseThrow(() -> new TransactionNotFoundException("Transaction not found for "+transactionId+" transactionId"));
 
         //check if status is pending
         if (!"PENDING".equalsIgnoreCase(transaction.getStatus()))
@@ -85,11 +87,39 @@ public class TransactionService {
             throw new RuntimeException("Unauthorized Access");
 
         Card cardDetails = transaction.getCard();
-        BigDecimal updatedBalance = cardDetails.getBalance().add(transaction.getAmount());
-        cardDetails.setBalance(updatedBalance);
+        cardDetails =this.setCardBalance(cardDetails,transaction.getAmount(),transactionType);
+
+        transaction.setType(transactionType);
         transaction.setStatus("SUCCESS");
 
-
         return ToConfirmTransResp.mapToConfirmTransactionResponseDto(transaction);
+    }
+
+    public Card setCardBalance(Card card, BigDecimal amount, String transactionType) {
+
+        if (card == null)
+            throw new IllegalArgumentException("card cannot be null");
+
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0)
+            throw new IllegalArgumentException("amount must be greater than zero");
+
+        if (transactionType == null || transactionType.isBlank())
+            throw new IllegalArgumentException("Transaction type cannot be blank");
+
+        if (AppConstants.Credit.equalsIgnoreCase(transactionType)) {
+            card.setBalance(card.getBalance().add(amount));
+
+        } else if (AppConstants.Debit.equalsIgnoreCase(transactionType)) {
+            if (card.getBalance().compareTo(amount) >= 0) {
+                card.setBalance(card.getBalance().subtract(amount));
+
+            } else {
+                throw new InsufficientBalanceException("Insufficient Balance !!!");
+            }
+        } else {
+            throw new IllegalArgumentException("Invalid transaction type!!!");
+        }
+
+        return card;
     }
 }

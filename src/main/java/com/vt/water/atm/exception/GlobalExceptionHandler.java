@@ -28,6 +28,12 @@ public class GlobalExceptionHandler {
 
     }
 
+    @ExceptionHandler(TransactionNotFoundException.class)
+    public ResponseEntity<ApiResponse<Map>> handleTransactionNotFoundException(TransactionNotFoundException exception) {
+        log.warn("Transaction lookup failed :{}", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(false, exception.getMessage(), null, LocalDateTime.now()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map>> handleMethodArgsNotValidException(MethodArgumentNotValidException exception) {
         log.warn("Validation failed for request: {}", exception.getMessage());
@@ -43,4 +49,12 @@ public class GlobalExceptionHandler {
 
 
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Map>> handleIllegalArgumentsException(IllegalArgumentException exception) {
+        log.warn("Illegal Arguments :{}", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, exception.getMessage(), null, LocalDateTime.now()));
+
+    }
+
 }

@@ -13,4 +13,5 @@ public class DisposeWaterRequestDto {
     private String cardNumber;
     @Positive(message = "Amount must be grater than zero!!!")
     private BigDecimal amount;
+    private String transactionType;
 }

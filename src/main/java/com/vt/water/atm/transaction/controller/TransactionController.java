@@ -41,13 +41,13 @@ public class TransactionController {
     }
 
     //confirm transaction - mean payment received
-    @PostMapping("/{transactionId}/confirm")
-    public ResponseEntity<ApiResponse> confirmTransaction(@PathVariable("transactionId") @NotBlank(message = "Transaction id is required!!!") String transactionId) {
+    @PostMapping("/{transactionId}/{transactionType}/confirm")
+    public ResponseEntity<ApiResponse> confirmTransaction(@PathVariable("transactionId") @NotBlank(message = "Transaction id is required!!!") String transactionId,@PathVariable("transactionType") @NotBlank(message = "Transaction type is required!!!") String transactionType) {
 
         //get mobile from JWT
         String mobile = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        ConfirmTransactionResponseDto confirmTransactionResponseDto = this.transactionService.confirmTransaction(transactionId, mobile);
+        ConfirmTransactionResponseDto confirmTransactionResponseDto = this.transactionService.confirmTransaction(transactionId, mobile,transactionType);
 
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<ConfirmTransactionResponseDto>(
                 true,

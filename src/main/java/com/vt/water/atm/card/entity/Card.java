@@ -5,12 +5,14 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
 @Data
+@ToString(exclude = "transaction")
 @NoArgsConstructor
 public class Card {
 
