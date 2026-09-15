@@ -57,4 +57,10 @@ public class GlobalExceptionHandler {
 
     }
 
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<ApiResponse<Map>> handleInsufficientBalanceException(InsufficientBalanceException exception){
+        log.warn(exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false,exception.getMessage(),null,LocalDateTime.now()));
+    }
+
 }

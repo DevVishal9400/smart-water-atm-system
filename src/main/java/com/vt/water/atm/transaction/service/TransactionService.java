@@ -89,6 +89,7 @@ public class TransactionService {
         Card cardDetails = transaction.getCard();
         cardDetails =this.setCardBalance(cardDetails,transaction.getAmount(),transactionType);
 
+
         transaction.setType(transactionType);
         transaction.setStatus("SUCCESS");
 

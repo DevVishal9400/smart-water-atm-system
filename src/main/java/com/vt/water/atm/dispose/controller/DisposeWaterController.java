@@ -3,6 +3,7 @@ package com.vt.water.atm.dispose.controller;
 import com.vt.water.atm.card.dto.CardResponseDto;
 import com.vt.water.atm.card.service.CardService;
 import com.vt.water.atm.common.response.ApiResponse;
+import com.vt.water.atm.constants.AppConstants;
 import com.vt.water.atm.dispose.dto.DisposeWaterRequestDto;
 import com.vt.water.atm.dispose.dto.DisposeWaterResponseDto;
 import com.vt.water.atm.dispose.service.DisposeWaterService;
@@ -35,7 +36,7 @@ public class DisposeWaterController {
     //dispose water & reduce balance
     @PostMapping
     public ResponseEntity<ApiResponse<DisposeWaterResponseDto>> disposeWater(@RequestBody @Valid DisposeWaterRequestDto disposeWaterRequestDto) {
-        DisposeWaterResponseDto cardDetailsAndDispose = this.disposeWaterService.getCardDetailsAndDispose(disposeWaterRequestDto.getCardNumber(), disposeWaterRequestDto.getAmount(),disposeWaterRequestDto.getTransactionType());
+        DisposeWaterResponseDto cardDetailsAndDispose = this.disposeWaterService.getCardDetailsAndDispose(disposeWaterRequestDto.getCardNumber(), disposeWaterRequestDto.getAmount(), AppConstants.Debit);
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<DisposeWaterResponseDto>(true,
                         "Balance Updated, pls procced to Dispose",
                         cardDetailsAndDispose,

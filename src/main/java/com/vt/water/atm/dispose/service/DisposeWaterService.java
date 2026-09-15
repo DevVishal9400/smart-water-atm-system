@@ -29,7 +29,7 @@ public class DisposeWaterService {
 
     //get card from db check avail balance> requested dispose
     @Transactional
-    public DisposeWaterResponseDto getCardDetailsAndDispose(String cardNumber, BigDecimal amount,String transctionType) {
+    public DisposeWaterResponseDto getCardDetailsAndDispose(String cardNumber, BigDecimal amount, String transactionType) {
 
         String loggedInUserMobile = SecurityContextHolder.getContext().getAuthentication().getName();
         Card card = this.cardRepo.findByCardNumber(cardNumber).orElseThrow(() -> new RuntimeException("Invalid Card Details!!!"));
@@ -39,13 +39,10 @@ public class DisposeWaterService {
         //deduct amount
         //update transaction as SUCCESS
 
+        InititiateTransactionResponseDto inititiateTransactionResponseDto = this.transactionService.initiateTransaction(ToInitiateTransactionRequestDto.mapToInitiateTransactionRequestDto(amount));
 
-            InititiateTransactionResponseDto inititiateTransactionResponseDto = this.transactionService.initiateTransaction(ToInitiateTransactionRequestDto.mapToInitiateTransactionRequestDto(amount));
-
-
-
-            ConfirmTransactionResponseDto confirmTransactionResponseDto = this.transactionService.confirmTransaction(inititiateTransactionResponseDto.getTransactionId(), loggedInUserMobile,transctionType);
-           return ToDisposeWaterResponseDto.mapToDisposeWaterResponseDto(cardNumber,card.getBalance());
+        ConfirmTransactionResponseDto confirmTransactionResponseDto = this.transactionService.confirmTransaction(inititiateTransactionResponseDto.getTransactionId(), loggedInUserMobile, transactionType);
+        return ToDisposeWaterResponseDto.mapToDisposeWaterResponseDto(cardNumber, card.getBalance());
 
 
     }
