@@ -6,6 +6,8 @@ import com.vt.water.atm.card.repositoy.CardRepo;
 import com.vt.water.atm.constants.AppConstants;
 import com.vt.water.atm.exception.InsufficientBalanceException;
 import com.vt.water.atm.exception.TransactionNotFoundException;
+import com.vt.water.atm.idimpotency.entity.Idimpotent;
+import com.vt.water.atm.idimpotency.service.IdImpotencyService;
 import com.vt.water.atm.transaction.dto.ConfirmTransactionResponseDto;
 import com.vt.water.atm.transaction.dto.InitiateTransactionRequestDto;
 import com.vt.water.atm.transaction.dto.InititiateTransactionResponseDto;
@@ -22,8 +24,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -38,12 +42,33 @@ public class TransactionService {
     private TransactionRepo transactionRepo;
     @Autowired
     private CardRepo cardRepo;
+    @Autowired
+    private IdImpotencyService idImpotencyService;
 
     //initiate transaction
-    public InititiateTransactionResponseDto initiateTransaction(InitiateTransactionRequestDto initiateTransactionRequestDto) {
-        Transaction transaction = this.createTransaction(initiateTransactionRequestDto.getAmount());
-        Transaction savedTransaction = this.transactionRepo.save(transaction);
-        return ToInitiateTranRespDto.MapToInitiateTranRespDto(savedTransaction);
+    public InititiateTransactionResponseDto initiateTransaction(InitiateTransactionRequestDto initiateTransactionRequestDto, String idempotencyKey) {
+        Optional<Idimpotent> key = idImpotencyService.isKeyPresent(idempotencyKey);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        if (key.isPresent()) {
+            //if record exists
+            return objectMapper.readValue(key.get().getResponse(), InititiateTransactionResponseDto.class);
+
+
+        } else {
+            //return new response & add it in idImpotency table
+            Transaction transaction = this.createTransaction(initiateTransactionRequestDto.getAmount());
+            Transaction savedTransaction = this.transactionRepo.save(transaction);
+            InititiateTransactionResponseDto inititiateTransactionResponseDto = ToInitiateTranRespDto.MapToInitiateTranRespDto(savedTransaction);
+
+            Idimpotent idimpotent=new Idimpotent();
+            idimpotent.setIdImpotentKey(idempotencyKey);
+            idimpotent.setResponse(objectMapper.writeValueAsString(inititiateTransactionResponseDto));
+            this.idImpotencyService.saveResponse(idimpotent);
+
+            return inititiateTransactionResponseDto;
+        }
+
 
     }
 
@@ -72,7 +97,7 @@ public class TransactionService {
     public ConfirmTransactionResponseDto confirmTransaction(String transactionId, String mobile, String transactionType) {
         //get the transaction id
         //get card details and update amount
-        Transaction transaction = this.transactionRepo.findByTransactionId(transactionId).orElseThrow(() -> new TransactionNotFoundException("Transaction not found for "+transactionId+" transactionId"));
+        Transaction transaction = this.transactionRepo.findByTransactionId(transactionId).orElseThrow(() -> new TransactionNotFoundException("Transaction not found for " + transactionId + " transactionId"));
 
         //check if status is pending
         if (!"PENDING".equalsIgnoreCase(transaction.getStatus()))
@@ -87,8 +112,7 @@ public class TransactionService {
             throw new RuntimeException("Unauthorized Access");
 
         Card cardDetails = transaction.getCard();
-        cardDetails =this.setCardBalance(cardDetails,transaction.getAmount(),transactionType);
-
+        cardDetails = this.setCardBalance(cardDetails, transaction.getAmount(), transactionType);
 
         transaction.setType(transactionType);
         transaction.setStatus("SUCCESS");

@@ -29,8 +29,8 @@ public class TransactionController {
     private AuthenticationManager manager;
 
     @PostMapping("/initiate")
-    public ResponseEntity<ApiResponse> initiateTransaction(@RequestBody @Valid InitiateTransactionRequestDto initiateTransactionRequestDto) {
-        InititiateTransactionResponseDto inititiateTransactionResponseDto = this.transactionService.initiateTransaction(initiateTransactionRequestDto);
+    public ResponseEntity<ApiResponse> initiateTransaction(@RequestBody @Valid InitiateTransactionRequestDto initiateTransactionRequestDto,@RequestHeader("Idempotency-Key") @NotBlank(message = "Idempotency-Key required!!!") String idempotencyKey) {
+        InititiateTransactionResponseDto inititiateTransactionResponseDto = this.transactionService.initiateTransaction(initiateTransactionRequestDto,idempotencyKey);
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<InititiateTransactionResponseDto>(
                 true,
                 "Transaction initiated successfully",

@@ -14,10 +14,14 @@ public class IdImpotencyService {
     private IdImpotancyRepo idImpotancyRepo;
 
     //check key is exist or not
-    public Optional<Idimpotent> isPresent(String key) {
+    public Optional<Idimpotent> isKeyPresent(String key) {
         if (key == null || key.isBlank())
             throw new IdImpotneceKeyRequiredException("IdImpotenceKey is required!!!");
 
         return this.idImpotancyRepo.findById(key);
+    }
+    //save response
+    public void saveResponse(Idimpotent data){
+        this.idImpotancyRepo.save(data);
     }
 }
